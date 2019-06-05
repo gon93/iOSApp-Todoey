@@ -12,27 +12,20 @@ class TodoListViewController: UITableViewController {
     
     var itemArray = [Item]()
     
-    let defaults = UserDefaults.standard
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
     override func viewDidLoad() {
         
         super.viewDidLoad()
-//        ["Finding Neemo", "Incredibles 2", "Sleeping Beauty", "Lion King", "Mulan", "Frozen", "Alice in Wonderland"]
-        let newItem = Item()
-        newItem.title = "Finding Neemo"
-        itemArray.append(newItem)
+
         
-        let newItem1 = Item()
-        newItem1.title = "Incredibles 2"
-        itemArray.append(newItem1)
+        print(dataFilePath!)
         
-        let newItem2 = Item()
-        newItem2.title = "Sleeping Beauty"
-        itemArray.append(newItem2)
+//        if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
+//            itemArray = items
+//        }
         
-        if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
-            itemArray = items
-        }
+        loadItems()
     }
     
     //MARK - Tableview Datasource Methods
@@ -45,7 +38,7 @@ class TodoListViewController: UITableViewController {
     //print the particular data into the cell
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        print("cellForRowatIndexPath Called")
+//        print("cellForRowatIndexPath Called")
         
         //reusing the tableView cell; so if the cell does not appear on the screen, the cell goes to the bottom and be reused.
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
@@ -70,8 +63,7 @@ class TodoListViewController: UITableViewController {
         
         item.done = !item.done
         
-        //reload everytime cell is clicked
-        tableView.reloadData()
+        saveItems()
         
         //deselect the grey highlight
         tableView.deselectRow(at: indexPath, animated: true)
@@ -95,10 +87,8 @@ class TodoListViewController: UITableViewController {
             
             self.itemArray.append(newItem)
             
-            self.defaults.set(self.itemArray, forKey: "TodoListArray")
+            self.saveItems()
             
-            //refresh the data so that new text is added
-            self.tableView.reloadData()
             
 //            print("Add item pressed")
         }
@@ -114,10 +104,35 @@ class TodoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
+    func saveItems(){
+        
+        //encoding the data
+        let encoder = PropertyListEncoder()
+        
+        do{
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+            
+        }catch{
+            print("Error encoding item array, \(error)")
+        }
+        
+        
+        //reload everytime cell is clicked
+        tableView.reloadData()
+    }
     
     
-    
-    
+    func loadItems(){
+        if let data = try? Data(contentsOf: dataFilePath!){
+            let decoder = PropertyListDecoder()
+            do{
+                itemArray = try decoder.decode([Item].self, from: data)
+            }catch {
+                print("Error decoding item array, \(error)")
+            }
+        }
+    }
     
 }
 
