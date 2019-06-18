@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class CategoryViewController: UITableViewController {
+class CategoryViewController: SwipeTableViewController {
     
     let realm = try! Realm()
     
@@ -19,7 +19,7 @@ class CategoryViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+        
         loadCategories()
     }
     
@@ -33,9 +33,15 @@ class CategoryViewController: UITableViewController {
         return categories?.count ?? 1
     }
     
+//    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+//        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell") as! SwipeTableViewCell
+//        cell.delegate = self
+//        return cell
+//    }
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
      
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories Added Yet"
         
@@ -52,6 +58,8 @@ class CategoryViewController: UITableViewController {
         
         tableView.deselectRow(at: indexPath, animated: true)
     }
+    
+
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         
@@ -110,6 +118,22 @@ class CategoryViewController: UITableViewController {
         tableView.reloadData()
     }
     
+    //MARK: Delete Data From Swipe
     
-   
+    override func updateModel(at indexPath: IndexPath) {
+        
+        //****it will bring function inside updatemodel in the superclass
+        super.updateModel(at: indexPath)
+        
+        if let categoryDeletion = categories?[indexPath.row]{
+            do{
+                try realm.write {
+                    realm.delete(categoryDeletion)
+                }
+            } catch{
+                print("Error deleting category,\(error)")
+            }
+
+        }
+    }
 }
